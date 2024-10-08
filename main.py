@@ -3,8 +3,8 @@ import uvicorn
 
 def main():
     uvicorn.run(
-        app="wsgi:app",
-        host="0.0.0.0",
+        app="wsgi:app",   # Uygulamanın doğru referans edildiğinden emin olun
+        host="127.0.0.1",  # Yerel makine için 127.0.0.1 veya localhost
         port=8080,
         reload=True,
     )

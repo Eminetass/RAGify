@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Search</title>
+</head>
+<body>
+    <h1>Blog Listesi</h1>
+    <ul>
+        {% for blog in blogs %}
+        <li>
+            <h2>{{ blog.blog_name }}</h2>
+            <p>{{ blog.context }}</p>
+            <small>Yazar: {{ blog.author }}</small>
+        </li>
+        {% endfor %}
+    </ul>
+
+    <h2>Arama Yap</h2>
+    <form method="post" action="/search">
+        <input type="text" name="query" placeholder="Aramak istediğiniz kelime" required>
+        <input type="number" name="top_k" placeholder="Sonuç sayısı" value="5" min="1">
+        <button type="submit">Ara</button>
+    </form>
+
+    <h2>Arama Sonuçları</h2>
+    <ul>
+        {% if results %}
+            {% for result in results %}
+            <li>
+                <h2>{{ result.blog_name }}</h2>
+                <p>{{ result.context }}</p>
+                <small>Yazar: {{ result.author }}</small>
+                <small>Mesafe: {{ result.distance }}</small>
+            </li>
+            {% endfor %}
+        {% else %}
+            <p>Sonuç bulunamadı.</p>
+        {% endif %}
+    </ul>
+
+    <h2>Chatbot Sorusu Sor</h2>
+    <form action="/chatbot/" method="post">
+        <input type="text" name="question" placeholder="Sorunuzu buraya yazın" required>
+        <button type="submit">Sor</button>
+    </form>
+
+</body>
+</html>
