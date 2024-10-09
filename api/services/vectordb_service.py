@@ -8,7 +8,7 @@ import torch
 import numpy as np
 
 
-collection_name = "news_blogs_collection"
+collection_name = "news_blogs_collections"
 
 model_name = "distilbert-base-uncased"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
@@ -34,18 +34,28 @@ def initialize_milvus():
 from sklearn.preprocessing import normalize
 
 def create_embedding(text):
+    
+    print(f"Gelen text tipi: {type(text)}")
+    print(f"Gelen text içeriği: {text}")
+    
+    
+    if isinstance(text, list):
+        text = " ".join(text)
+    
+    
+    if not isinstance(text, str):
+        raise ValueError("Gelen veri string olmalı!")
+    
     inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True)
+   
     with torch.no_grad():
         outputs = model(**inputs)
-        embedding = outputs.last_hidden_state.mean(dim=1).squeeze().numpy()
-        # Normalizasyon ekle
-        embedding = normalize(embedding.reshape(1, -1))  
-        return embedding.flatten()  
-
-    
-    
+        
+    embedding = outputs.last_hidden_state.mean(dim=1).squeeze().numpy()
     normalized_embedding = embedding / np.linalg.norm(embedding)
+
     return normalized_embedding
+
 
 def check_collection(news_blogs: str) -> bool:
     
@@ -74,7 +84,7 @@ def create_blogs_collection():
 
     schema = CollectionSchema(fields=[id_field, title_field, context_field, embedding_field], description="Blog collection")
 
-    collection_name = "news_blogs_collection"
+    collection_name = "news_blogs_collections"
     if not utility.has_collection(collection_name):
         blogs_collection = Collection(name=collection_name, schema=schema)
         print("Koleksiyon başarıyla oluşturuldu.")
@@ -103,45 +113,54 @@ def create_blogs_collection():
 
 
 
-def search_in_milvus(query: str, db: Session, top_k: int = 5):
+def search_in_milvus(query, db, top_k=5):
+    print(f"query tipi: {type(query)}")
     
+    
+    if isinstance(query, np.ndarray):
+        query = query.tolist()
+
+    
+    if isinstance(query, list):
+       
+        query = [str(i) for i in query]
+
+        
+        query = " ".join(query)
+
+    
+    if not isinstance(query, str):
+        raise ValueError("Query string olmalı!")
+
     query_embedding = create_embedding(query)
 
-   
-    milvus_collection = Collection("news_blogs_collection")
+    milvus_collection = Collection("news_blogs_collections")
     milvus_collection.load()  
 
-    
     search_params = {
-        "metric_type": "L2",  
-        "params": {"nprobe": 200},  
+        "metric_type": "L2",
+        "params": {"nprobe": 200},
     }
 
     try:
-
         results = milvus_collection.search(
             data=[query_embedding.tolist()],  
             anns_field="embedding",  
             param=search_params,
             limit=top_k  
         )
-
-        print("query")
-        print(query_embedding)
-        print("query embedding to list")
-        print(query_embedding.tolist())
+        print("query embedding:", query_embedding)
     except Exception as e:
+        print(f"Search error: {str(e)}")
         return {"error": f"Arama sırasında hata oluştu: {str(e)}"}
 
-   
     processed_results = []
     
-    for hits in results:  
-        for hit in hits:  
+    for hits in results:
+        for hit in hits:
             blog_id = hit.id  
             distance = hit.distance 
 
-           
             blog = db.query(models.Blog).filter(models.Blog.id == blog_id).first()
 
             if blog:
@@ -154,5 +173,7 @@ def search_in_milvus(query: str, db: Session, top_k: int = 5):
                 })
 
     return {"results": processed_results}
+
+
 
 

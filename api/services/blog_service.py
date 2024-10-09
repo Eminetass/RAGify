@@ -10,24 +10,38 @@ tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModel.from_pretrained(model_name)
 
 def create_embedding(text):
+    # Gelen verinin tipi ve içeriği kontrol ediliyor
+    print(f"Gelen text tipi: {type(text)}")
+    print(f"Gelen text içeriği: {text}")
+    
+    # Eğer gelen veri bir liste ise stringe dönüştürülüyor
+    if isinstance(text, list):
+        text = " ".join(text)
+    
+    # Eğer hala string değilse hata fırlatılıyor
+    if not isinstance(text, str):
+        raise ValueError("Gelen veri string olmalı!")
+    
     inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True)
    
     with torch.no_grad():
         outputs = model(**inputs)
         
-        embedding = outputs.last_hidden_state.mean(dim=1).squeeze().numpy()
-
-    
+    embedding = outputs.last_hidden_state.mean(dim=1).squeeze().numpy()
     normalized_embedding = embedding / np.linalg.norm(embedding)
 
     return normalized_embedding
+
+
+
+
 
 def add_blogs_from_mssql(db: Session):
     
     blogs = db.query(models.Blog).all()  
 
   
-    milvus_collection = Collection("news_blogs_collection")
+    milvus_collection = Collection("news_blogs_collections")
 
     for blog in blogs:
         

@@ -16,7 +16,7 @@ templates = Jinja2Templates(directory="C:/Users/erene/OneDrive/Masaüstü/softte
 
 models.create_tables()
 
-# Milvus'ı başlat
+
 initialize_milvus()
 app.include_router(router)
 
@@ -27,7 +27,7 @@ add_blogs_from_mssql(db)
 
 @router.get("/")
 def read_root(request: Request, db: Session = Depends(models.get_db)):
-    print("Ana sayfa isteği alındı")  # Hata ayıklama
+    print("Ana sayfa isteği alındı")  
     all_blogs = db.query(models.Blog).all()
     return templates.TemplateResponse("index.html", {"request": request, "blogs": all_blogs})
 
@@ -37,11 +37,11 @@ def add_blog(blog_name: str = Form(...), context: str = Form(...), author: str =
     db.add(new_blog)
     db.commit()
     
-    # Embedding oluştur
+    
     embedding = create_embedding(context)
     
     try:
-        milvus_collection = Collection("news_blogs_collection")
+        milvus_collection = Collection("news_blogs_collections")
         
         insert_data = [
             [new_blog.id],
@@ -79,4 +79,5 @@ async def ask_chatbot(question: str = Form(...), db: Session = Depends(models.ge
     
     response = chatbot_query(question, db)
     return {"response": response}
+
 
