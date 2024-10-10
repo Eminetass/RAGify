@@ -7,16 +7,15 @@ import numpy as np
 
 load_dotenv()
 
-# Azure OpenAI ayarları
 openai.api_type = "azure"
-openai.api_key = os.getenv("AZURE_OPENAI_API_KEY")  # Azure OpenAI anahtarı
-openai.api_base = os.getenv("AZURE_OPENAI_ENDPOINT")  # Azure OpenAI endpoint URL
-openai.api_version = "2024-04-01-preview"  # Azure OpenAI API versiyonu
+openai.api_key = os.getenv("AZURE_OPENAI_API_KEY")  
+openai.api_base = os.getenv("AZURE_OPENAI_ENDPOINT")  
+openai.api_version = "2024-04-01-preview"  
 
 def get_openai_response(question):
     try:
         response = openai.ChatCompletion.create(
-            engine="gpt-4o-mini",  # Azure'deki model ismi
+            engine="gpt-4o-mini",  
             messages=[
                 {"role": "user", "content": question}
             ],
